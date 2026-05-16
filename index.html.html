@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Mature Number Sense Task</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 18px 30px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .screen {
+      width: 100%;
+      max-width: 900px;
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .title {
+      font-size: 34px;
+      margin: 18px 0 14px;
+      color: #222;
+      line-height: 1.4;
+    }
+
+    .instruction {
+      font-size: 28px;
+      color: #333;
+      line-height: 1.5;
+      margin: 12px 0;
+    }
+
+    .small {
+      font-size: 22px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .input-row {
+      margin: 20px 0 10px;
+      display: flex;
+      justify-content: center;
+    }
+
+    input[type="text"] {
+      font-size: 28px;
+      padding: 16px 18px;
+      width: min(90vw, 420px);
+      border: 2px solid #888;
+      border-radius: 12px;
+      box-sizing: border-box;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      font-size: 30px;
+      padding: 18px 34px;
+      min-width: 180px;
+      min-height: 84px;
+      border: 2px solid #333;
+      border-radius: 14px;
+      background: #f4f4f4;
+      color: #111;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn:active {
+      background: #ddd;
+    }
+
+    #task-area {
+      width: 100%;
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 12px;
+      box-sizing: border-box;
+    }
+
+    #global-instruction {
+      font-size: 30px;
+      margin-bottom: 24px;
+      color: #333;
+      line-height: 1.4;
+    }
+
+    #item-instruction {
+      font-size: 26px;
+      margin-bottom: 18px;
+      color: #444;
+      line-height: 1.4;
+    }
+
+    #stimulus {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+    }
+
+    #stimulus img {
+      max-width: 75vw;
+      max-height: 55vh;
+    }
+
+    .fixation {
+      font-size: 88px;
+      line-height: 1;
+      display: inline-block;
+      transform: translateY(40px);
+    }
+
+    .feedback {
+      height: 36px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      font-size: 26px;
+      color: #222;
+    }
+
+    .response-bar {
+      display: flex;
+      gap: 36px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
+    .response-btn {
+      font-size: 32px;
+      padding: 20px 40px;
+      min-width: 180px;
+      min-height: 92px;
+      border: 2px solid #333;
+      border-radius: 14px;
+      background: #f5f5f5;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .response-btn:active {
+      background: #ddd;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .completed {
+      font-size: 28px;
+      color: #222;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="subject-screen" class="screen active">
+    <div class="title">請輸入受試者編號</div>
+    <div class="instruction small">請使用 iPad 的螢幕鍵盤輸入 subject code，然後按「確認」。</div>
+    <div class="input-row">
+      <input id="subject-code" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Subject Code">
+    </div>
+    <div class="button-row">
+      <button id="subject-confirm-btn" class="btn" type="button">確認</button>
+    </div>
+    <div id="subject-message" class="small"></div>
+  </div>
+
+  <div id="instruction-screen" class="screen">
+    <div id="overall-instruction" class="instruction"></div>
+    <div class="button-row">
+      <button id="start-btn" class="btn" type="button">開始</button>
+    </div>
+  </div>
+
+  <div id="task-area">
+    <div id="global-instruction"></div>
+    <div id="item-instruction"></div>
+    <div id="stimulus"></div>
+    <div id="feedback" class="feedback"></div>
+    <div id="response-bar" class="response-bar">
+      <button id="true-btn" class="response-btn" type="button">正確</button>
+      <button id="false-btn" class="response-btn" type="button">錯誤</button>
+    </div>
+  </div>
+
+  <div id="completion-screen" class="screen">
+    <div id="completion-text" class="completed">測試已經完成。</div>
+  </div>
+
+  <script>
+    let subjectCode = "";
+    let currentBlock = "practice";
+    let currentIndex = 0;
+    let acceptingResponse = false;
+    let trialStartTime = null;
+    let waitingForPracticeStart = false;
+    let waitingForFormalStart = false;
+    let waitingForPracticeRetry = false;
+    let showingFixation = false;
+    let practiceRerunUsed = false;
+
+    const responsesPractice = [];
+    const responsesFormal = [];
+
+    const practiceTrials = [
+      { stimulus: "images/practice1.png", correct: "false", block: "practice" },
+      { stimulus: "images/practice2.png", correct: "true", block: "practice" },
+      { stimulus: "images/practice3.png", correct: "false", block: "practice" },
+      { stimulus: "images/practice4.png", correct: "true", block: "practice" }
+    ];
+
+    const formalTrials = [
+      { stimulus: "images/formal1.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal2.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal3.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal4.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal5.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal6.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal7.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal8.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal9.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal10.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal11.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal12.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal13.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal14.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal15.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal16.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal17.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal18.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal19.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal20.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal21.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal22.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal23.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal24.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal25.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal26.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal27.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal28.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal29.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal30.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal31.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal32.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal33.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal34.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal35.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal36.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal37.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal38.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal39.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal40.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal41.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal42.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal43.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal44.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal45.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal46.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal47.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal48.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal49.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal50.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal51.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal52.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal53.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal54.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal55.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal56.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal57.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal58.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal59.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal60.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal61.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal62.png", correct: "true", block: "formal" },
+      { stimulus: "images/formal63.png", correct: "false", block: "formal" },
+      { stimulus: "images/formal64.png", correct: "true", block: "formal" }
+    ];
+
+    function shuffle(array) {
+      let i = array.length;
+      while (i !== 0) {
+        const j = Math.floor(Math.random() * i);
+        i--;
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function extractItemNumber(stimulusPath) {
+      const m = stimulusPath.match(/(\d+)(?=\.\w+$)/);
+      return m ? m[1] : "";
+    }
+
+    function showScreen(id) {
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function showTaskArea(show) {
+      document.getElementById("task-area").style.display = show ? "flex" : "none";
+    }
+
+    function clearStimulusAndFeedback() {
+      document.getElementById("stimulus").innerHTML = "";
+      document.getElementById("feedback").textContent = "";
+    }
+
+    function hideResponseButtons() {
+      document.getElementById("response-bar").classList.add("hidden");
+    }
+
+    function showResponseButtons() {
+      document.getElementById("response-bar").classList.remove("hidden");
+    }
+
+    function hideTaskTextsDuringFixation() {
+      document.getElementById("item-instruction").classList.add("hidden");
+      document.getElementById("global-instruction").classList.add("hidden");
+      hideResponseButtons();
+      document.getElementById("feedback").textContent = "";
+    }
+
+    function showTaskTexts() {
+      document.getElementById("item-instruction").classList.remove("hidden");
+      document.getElementById("global-instruction").classList.remove("hidden");
+      showResponseButtons();
+    }
+
+    function renderOverallInstructionPractice() {
+      document.getElementById("overall-instruction").innerHTML =
+        "在這個測試中，你需要判斷每條算式或句子是否正確。<br>" +
+        "請按「正確」或「錯誤」按鈕作答。<br>" +
+        "請按「開始」進入練習。";
+      waitingForPracticeStart = true;
+      waitingForFormalStart = false;
+      waitingForPracticeRetry = false;
+    }
+
+    function renderRetryInstruction(accuracy) {
+      document.getElementById("overall-instruction").innerHTML =
+        "你在練習題的準確率是 " + Math.round(accuracy * 100) + "% (少於 100%)。<br>" +
+        "請按開始重新嘗試練習題。";
+      waitingForPracticeStart = false;
+      waitingForFormalStart = false;
+      waitingForPracticeRetry = true;
+    }
+
+    function renderOverallInstructionFormal() {
+      document.getElementById("overall-instruction").innerHTML =
+        "練習已完成。<br>" +
+        "請按「開始」正式進入測試。";
+      waitingForPracticeStart = false;
+      waitingForFormalStart = true;
+      waitingForPracticeRetry = false;
+    }
+
+    function showFixationThenTrial() {
+      const blockArray = currentBlock === "practice" ? practiceTrials : formalTrials;
+      if (currentIndex >= blockArray.length) {
+        if (currentBlock === "practice") afterPracticeBlock();
+        else endTask();
+        return;
+      }
+
+      showingFixation = true;
+      acceptingResponse = false;
+      hideTaskTextsDuringFixation();
+      clearStimulusAndFeedback();
+      document.getElementById("stimulus").innerHTML = '<span class="fixation">+</span>';
+
+      setTimeout(() => {
+        showingFixation = false;
+        showTaskTexts();
+        showTrial();
+      }, 800);
+    }
+
+    function showTrial() {
+      const blockArray = currentBlock === "practice" ? practiceTrials : formalTrials;
+      if (currentIndex >= blockArray.length) {
+        if (currentBlock === "practice") afterPracticeBlock();
+        else endTask();
+        return;
+      }
+
+      const trial = blockArray[currentIndex];
+      const stimDiv = document.getElementById("stimulus");
+      stimDiv.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = trial.stimulus;
+      img.alt = "Stimulus image";
+      stimDiv.appendChild(img);
+
+      document.getElementById("feedback").textContent = "";
+      trialStartTime = performance.now();
+      acceptingResponse = true;
+    }
+
+    function resetPracticeForRerun() {
+      currentBlock = "practice";
+      currentIndex = 0;
+      acceptingResponse = false;
+      showingFixation = false;
+      clearStimulusAndFeedback();
+      shuffle(practiceTrials);
+      showTaskArea(false);
+      showScreen("instruction-screen");
+    }
+
+    function afterPracticeBlock() {
+      const total = responsesPractice.length;
+      const correctCount = responsesPractice.reduce((sum, r) => sum + r.accuracy, 0);
+      const accuracy = total > 0 ? correctCount / total : 0;
+
+      if (!practiceRerunUsed && accuracy < 1) {
+        practiceRerunUsed = true;
+        responsesPractice.length = 0;
+        resetPracticeForRerun();
+        renderRetryInstruction(accuracy);
+        return;
+      }
+
+      currentBlock = "formal";
+      currentIndex = 0;
+      acceptingResponse = false;
+      showingFixation = false;
+      clearStimulusAndFeedback();
+      shuffle(formalTrials);
+      renderOverallInstructionFormal();
+      showTaskArea(false);
+      showScreen("instruction-screen");
+    }
+
+    function handleResponse(response) {
+      if (!acceptingResponse || showingFixation) return;
+
+      acceptingResponse = false;
+
+      const blockArray = currentBlock === "practice" ? practiceTrials : formalTrials;
+      const trial = blockArray[currentIndex];
+      const rt = performance.now() - trialStartTime;
+      const correct = response === trial.correct;
+
+      const record = {
+        subjectCode: subjectCode,
+        block: currentBlock,
+        trialIndexWithinBlock: currentIndex,
+        itemNumber: extractItemNumber(trial.stimulus),
+        stimulus: trial.stimulus,
+        correctAnswer: trial.correct,
+        response: response,
+        accuracy: correct ? 1 : 0,
+        rt_ms: rt.toFixed(3)
+      };
+
+      if (currentBlock === "practice") responsesPractice.push(record);
+      else responsesFormal.push(record);
+
+      currentIndex++;
+      setTimeout(showFixationThenTrial, 800);
+    }
+
+    // For subject/confirm buttons: use only click (no preventDefault on touch)
+    function bindSimpleClick(el, fn) {
+      el.addEventListener("click", fn);
+    }
+
+    // For response/start buttons: use touchend + click with preventDefault
+    function bindTap(el, fn) {
+      el.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        fn();
+      }, { passive: false });
+
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        fn();
+      });
+    }
+
+    function startPractice() {
+      showTaskArea(true);
+      currentBlock = "practice";
+      currentIndex = 0;
+      clearStimulusAndFeedback();
+      showTaskTexts();
+      showFixationThenTrial();
+    }
+
+    function startFormal() {
+      showTaskArea(true);
+      currentBlock = "formal";
+      currentIndex = 0;
+      clearStimulusAndFeedback();
+      showTaskTexts();
+      showFixationThenTrial();
+    }
+
+    function downloadCSV(csvStr, filename) {
+      const blob = new Blob([csvStr], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+async function uploadToCloud(blob, filename) {
+  const cloudEndpoint = "https://script.google.com/macros/s/AKfycbxku7IzE0SeEb8W5x_hnkw8zua9nW4Iub8plBNjjwpsTyk0drm3aNSD0IpvWdAAZF7t/exec"; 
+
+  if (!cloudEndpoint || cloudEndpoint.includes("1QY2y3QgGDPnlfPov4s-ffIaw6PCH-hEd")) {
+    console.warn("Cloud upload not configured: cloudEndpoint not set.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", blob, filename);
+  formData.append("subjectCode", subjectCode);
+
+  try {
+    const response = await fetch(cloudEndpoint, {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await response.json();
+    if (result.status === "ok") {
+      console.log("Cloud upload succeeded:", result.filename);
+    } else {
+      console.error("Cloud upload reported error:", result.message);
+    }
+  } catch (err) {
+    console.error("Cloud upload failed:", err);
+  }
+}
+
+    async function saveDataLocallyAndPrepareCloud(allResponses) {
+      const header = [
+        "subjectCode",
+        "block",
+        "trialIndexWithinBlock",
+        "itemNumber",
+        "stimulus",
+        "correctAnswer",
+        "response",
+        "accuracy",
+        "rt_ms"
+      ];
+
+      let csvContent = header.join(",") + "\n";
+      allResponses.forEach(r => {
+        const row = [
+          r.subjectCode,
+          r.block,
+          r.trialIndexWithinBlock,
+          r.itemNumber,
+          r.stimulus,
+          r.correctAnswer,
+          r.response,
+          r.accuracy,
+          r.rt_ms
+        ].map(cell => JSON.stringify(cell)).join(",");
+        csvContent += row + "\n";
+      });
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const filename = "true_false_task_data_" + subjectCode + ".csv";
+      downloadCSV(csvContent, filename);
+      await uploadToCloud(blob, filename);
+    }
+
+    function endTask() {
+      showTaskArea(false);
+      clearStimulusAndFeedback();
+      document.getElementById("completion-text").textContent = "測試已經完成。";
+      showScreen("completion-screen");
+
+      const allResponses = responsesPractice.concat(responsesFormal);
+      saveDataLocallyAndPrepareCloud(allResponses);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      shuffle(practiceTrials);
+      shuffle(formalTrials);
+
+      const subjectInput = document.getElementById("subject-code");
+      const subjectBtn = document.getElementById("subject-confirm-btn");
+      const subjectMsg = document.getElementById("subject-message");
+      const startBtn = document.getElementById("start-btn");
+
+      // Simple click for subject confirmation (works reliably on iPad)
+      bindSimpleClick(subjectBtn, () => {
+        const val = subjectInput.value.trim();
+        if (!val) {
+          subjectMsg.textContent = "請先輸入 subject code。";
+          return;
+        }
+
+        subjectCode = val;
+        subjectMsg.textContent = "";
+        renderOverallInstructionPractice();
+        showScreen("instruction-screen");
+      });
+
+      bindTap(startBtn, () => {
+        if (waitingForPracticeStart) {
+          waitingForPracticeStart = false;
+          showScreen("task-area");
+          startPractice();
+        } else if (waitingForPracticeRetry) {
+          waitingForPracticeRetry = false;
+          showScreen("task-area");
+          startPractice();
+        } else if (waitingForFormalStart) {
+          waitingForFormalStart = false;
+          showScreen("task-area");
+          startFormal();
+        }
+      });
+
+      bindTap(document.getElementById("true-btn"), () => handleResponse("true"));
+      bindTap(document.getElementById("false-btn"), () => handleResponse("false"));
+
+      showScreen("subject-screen");
+      showTaskArea(false);
+      clearStimulusAndFeedback();
+      hideResponseButtons();
+      renderOverallInstructionPractice();
+    });
+  </script>
+</body>
+</html>
