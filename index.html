@@ -545,10 +545,10 @@
 async function uploadToCloud(blob, filename) {
   const cloudEndpoint = "https://script.google.com/macros/s/AKfycbxku7IzE0SeEb8W5x_hnkw8zua9nW4Iub8plBNjjwpsTyk0drm3aNSD0IpvWdAAZF7t/exec"; 
 
-  if (!cloudEndpoint || cloudEndpoint.includes("1QY2y3QgGDPnlfPov4s-ffIaw6PCH-hEd")) {
-    console.warn("Cloud upload not configured: cloudEndpoint not set.");
-    return;
-  }
+  if (!cloudEndpoint) {
+  console.warn("Cloud upload not configured.");
+  return;
+}
 
   const formData = new FormData();
   formData.append("file", blob, filename);
