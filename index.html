@@ -570,6 +570,7 @@ function ensureUploadForm() {
     const csvInput = document.createElement("textarea");
     csvInput.name = "csvText";
     csvInput.id = "upload-csvText";
+    csvInput.style.display = "none";
     form.appendChild(csvInput);
 
     document.body.appendChild(form);
@@ -582,7 +583,7 @@ function uploadToCloud(csvText) {
   document.getElementById("upload-csvText").value = csvText;
   document.getElementById("upload-form").submit();
 }
-
+    
 function saveDataAndUpload(allResponses) {
   const header = [
     "subjectCode",
