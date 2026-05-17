@@ -475,7 +475,7 @@
       const rt = performance.now() - trialStartTime;
       const correct = response === trial.correct;
 
-      const record = {
+const record = {
   subjectCode: subjectCode,
   block: currentBlock,
   trialIndexWithinBlock: currentIndex,
@@ -542,46 +542,21 @@
       URL.revokeObjectURL(url);
     }
 
-function ensureUploadForm() {
-  let iframe = document.getElementById("upload-iframe");
-  if (!iframe) {
-    iframe = document.createElement("iframe");
-    iframe.id = "upload-iframe";
-    iframe.name = "upload-iframe";
-    iframe.style.display = "none";
-    document.body.appendChild(iframe);
+async function uploadToCloud(csvText) {
+  const cloudEndpoint = "https://script.google.com/macros/s/AKfycby20eL6OWKTDfLGaeoa4ht_iRk4J7rET674dRjihhK1PB-P-v7kOzUCQLlF6vCnx9mD/exec";
+  const url = cloudEndpoint + "?subjectCode=" + encodeURIComponent(subjectCode);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: csvText
+    });
+
+    const text = await response.text();
+    console.log("Upload response:", text);
+  } catch (err) {
+    console.error("Upload failed:", err);
   }
-
-  let form = document.getElementById("upload-form");
-  if (!form) {
-    form = document.createElement("form");
-    form.id = "upload-form";
-    form.method = "POST";
-    form.action = "https://script.google.com/macros/s/AKfycby20eL6OWKTDfLGaeoa4ht_iRk4J7rET674dRjihhK1PB-P-v7kOzUCQLlF6vCnx9mD/exec";
-    form.target = "upload-iframe";
-    form.style.display = "none";
-
-    const subjectInput = document.createElement("input");
-    subjectInput.type = "hidden";
-    subjectInput.name = "subjectCode";
-    subjectInput.id = "upload-subjectCode";
-    form.appendChild(subjectInput);
-
-    const csvInput = document.createElement("textarea");
-    csvInput.name = "csvText";
-    csvInput.id = "upload-csvText";
-    csvInput.style.display = "none";
-    form.appendChild(csvInput);
-
-    document.body.appendChild(form);
-  }
-}
-
-function uploadToCloud(csvText) {
-  ensureUploadForm();
-  document.getElementById("upload-subjectCode").value = subjectCode;
-  document.getElementById("upload-csvText").value = csvText;
-  document.getElementById("upload-form").submit();
 }
     
 function saveDataAndUpload(allResponses) {
