@@ -542,35 +542,65 @@
       URL.revokeObjectURL(url);
     }
 
-async function uploadToCloud(blob, filename) {
-  const cloudEndpoint = "https://script.google.com/macros/s/AKfycbxku7IzE0SeEb8W5x_hnkw8zua9nW4Iub8plBNjjwpsTyk0drm3aNSD0IpvWdAAZF7t/exec"; 
+async function uploadToCloud(csvText, filename) {
+  const cloudEndpoint = "https://script.google.com/macros/s/AKfycbxku7IzE0SeEb8W5x_hnkw8zua9nW4Iub8plBNjjwpsTyk0drm3aNSD0IpvWdAAZF7t/exec";
 
   if (!cloudEndpoint) {
-  console.warn("Cloud upload not configured.");
-  return;
-}
-
-  const formData = new FormData();
-  formData.append("file", blob, filename);
-  formData.append("subjectCode", subjectCode);
+    console.warn("Cloud upload not configured.");
+    return;
+  }
 
   try {
-    const response = await fetch(cloudEndpoint, {
+    const url = cloudEndpoint + "?subjectCode=" + encodeURIComponent(subjectCode);
+    const response = await fetch(url, {
       method: "POST",
-      body: formData
+      headers: {
+        "Content-Type": "text/csv;charset=utf-8"
+      },
+      body: csvText
     });
 
-    const result = await response.json();
-    if (result.status === "ok") {
-      console.log("Cloud upload succeeded:", result.filename);
-    } else {
-      console.error("Cloud upload reported error:", result.message);
-    }
+    const text = await response.text();
+    console.log("Cloud response:", text);
   } catch (err) {
     console.error("Cloud upload failed:", err);
   }
 }
 
+async function saveDataLocallyAndPrepareCloud(allResponses) {
+  const header = [
+    "subjectCode",
+    "block",
+    "trialIndexWithinBlock",
+    "itemNumber",
+    "stimulus",
+    "correctAnswer",
+    "response",
+    "accuracy",
+    "rt_ms"
+  ];
+
+  let csvContent = header.join(",") + "\n";
+  allResponses.forEach(r => {
+    const row = [
+      r.subjectCode,
+      r.block,
+      r.trialIndexWithinBlock,
+      r.itemNumber,
+      r.stimulus,
+      r.correctAnswer,
+      r.response,
+      r.accuracy,
+      r.rt_ms
+    ].map(cell => JSON.stringify(cell)).join(",");
+    csvContent += row + "\n";
+  });
+
+  const filename = "true_false_task_data_" + subjectCode + ".csv";
+  downloadCSV(csvContent, filename);
+  await uploadToCloud(csvContent, filename);
+}
+    
     async function saveDataLocallyAndPrepareCloud(allResponses) {
       const header = [
         "subjectCode",
