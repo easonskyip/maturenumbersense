@@ -592,41 +592,6 @@ async function saveDataLocallyAndPrepareCloud(allResponses) {
   downloadCSV(csvContent, filename);
   await uploadToCloud(csvContent, filename);
 }
-    
-    async function saveDataLocallyAndPrepareCloud(allResponses) {
-      const header = [
-        "subjectCode",
-        "block",
-        "trialIndexWithinBlock",
-        "itemNumber",
-        "stimulus",
-        "correctAnswer",
-        "response",
-        "accuracy",
-        "rt_ms"
-      ];
-
-      let csvContent = header.join(",") + "\n";
-      allResponses.forEach(r => {
-        const row = [
-          r.subjectCode,
-          r.block,
-          r.trialIndexWithinBlock,
-          r.itemNumber,
-          r.stimulus,
-          r.correctAnswer,
-          r.response,
-          r.accuracy,
-          r.rt_ms
-        ].map(cell => JSON.stringify(cell)).join(",");
-        csvContent += row + "\n";
-      });
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const filename = "true_false_task_data_" + subjectCode + ".csv";
-      downloadCSV(csvContent, filename);
-      await uploadToCloud(blob, filename);
-    }
 
     function endTask() {
       showTaskArea(false);
