@@ -542,7 +542,7 @@
       URL.revokeObjectURL(url);
     }
 
-    function ensureUploadForm() {
+function ensureUploadForm() {
   let iframe = document.getElementById("upload-iframe");
   if (!iframe) {
     iframe = document.createElement("iframe");
@@ -557,7 +557,7 @@
     form = document.createElement("form");
     form.id = "upload-form";
     form.method = "POST";
-    form.action = "https://script.google.com/macros/s/AKfycby20eL6OWKTDfLGaeoa4ht_iRk4J7rET674dRjihhK1PB-P-v7kOzUCQLlF6vCnx9mD/exec";
+    form.action = "YOUR_APPS_SCRIPT_URL_HERE";
     form.target = "upload-iframe";
     form.style.display = "none";
 
@@ -570,7 +570,6 @@
     const csvInput = document.createElement("textarea");
     csvInput.name = "csvText";
     csvInput.id = "upload-csvText";
-    csvInput.style.display = "none";
     form.appendChild(csvInput);
 
     document.body.appendChild(form);
