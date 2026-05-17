@@ -545,18 +545,10 @@
 async function uploadToCloud(csvText, filename) {
   const cloudEndpoint = "https://script.google.com/macros/s/AKfycby20eL6OWKTDfLGaeoa4ht_iRk4J7rET674dRjihhK1PB-P-v7kOzUCQLlF6vCnx9mD/exec";
 
-  if (!cloudEndpoint) {
-    console.warn("Cloud upload not configured.");
-    return;
-  }
-
   try {
     const url = cloudEndpoint + "?subjectCode=" + encodeURIComponent(subjectCode);
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "text/csv;charset=utf-8"
-      },
       body: csvText
     });
 
